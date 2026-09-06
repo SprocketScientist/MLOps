@@ -30,6 +30,9 @@ best_model = grid.best_estimator_
 print("Best params:", grid.best_params_)
 print(classification_report(ytest, best_model.predict(Xtest)))
 
-# Save next to app.py so the Streamlit app can load it directly
-joblib.dump(best_model, "deployment/Wellness_Tourism_Predictor_model_v1.joblib")
-print("Model saved to deployment/Wellness_Tourism_Predictor_model_v1.joblib")
+output_dir = "tourism_project/deployment"
+os.makedirs(output_dir, exist_ok=True)
+
+model_path = os.path.join(output_dir, "Wellness_Tourism_Predictor_model_v1.joblib")
+joblib.dump(best_model, model_path)
+print(f"Model saved to {model_path}")
