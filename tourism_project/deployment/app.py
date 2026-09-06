@@ -23,13 +23,13 @@ NumberOfPersonVisiting  = st.number_input("Number of Person Visiting",1,10,2,1)
 NumberOfFollowups       = st.number_input("Number of Followups",1,10,2,1)
 ProductPitched          = st.selectbox("Product Pitched", ["Basic", "Standard", "Deluxe", "Super Deluxe", "King"])
 PreferredPropertyStar   = st.number_input("Preferred Property Star",1,5,3,1)
-NumberOfTrips           = st.number_input("Number of Trips",1,25,2,1)
+NumberOfTrips           = st.number_input("NumberOfTrips",1,25,2,1)
 Passport                = st.selectbox("Passport", ["Yes", "No"])
 PitchSatisfactionScore  = st.number_input("Pitch Satisfaction Score",1,5,3,1)
 OwnCar                  = st.selectbox("Own Car", ["Yes", "No"])
-NumberOfChildrenVisiting= st.number_input("Number of Children Visiting",0,10,0,1)
+NumberOfChildrenVisiting= st.number_input("NumberOfChildrenVisiting",0,10,0,1)
 Designation             = st.selectbox("Designation", ["Executive", "Manager", "Senior Manager","AVP", "VP"])
-MonthlyIncome           = st.number_input("Monthly Income",1000,100000,10000,1)
+MonthlyIncome           = st.number_input("MonthlyIncome",1000,100000,10000,1)
 
 # adding the input data into a pd dataframe
 input_data = pd.DataFrame([{
@@ -51,10 +51,10 @@ input_data = pd.DataFrame([{
     "NumberOfChildrenVisiting" : NumberOfChildrenVisiting,
     "Designation" : Designation,
     "MonthlyIncome" : MonthlyIncome
-}]) 
+}])
 
 if st.button("Predict Outcome"):
     prediction = model.predict(input_data)[0]
     result = "Product Taken" if prediction == 1 else "Product Not Taken"
     st.subheader("Prediction Result:")
-    st.success(f"The model predicts: **{result}**")    
+    st.success(f"The model predicts: **{result}**")
