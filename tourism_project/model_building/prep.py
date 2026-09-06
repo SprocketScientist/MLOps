@@ -6,56 +6,54 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.compose import ColumnTransformer
 
+# 1. Load data
 df = pd.read_csv("tourism_project/data/tourism.csv")
 
-# Dropping unnecessary columns (customer ID as not useful for model building and gender to avoid unethical model bias)
-df.drop(columns=["CustomerID","Gender"], inplace=True)
+# 2. Drop identifiers, sensitive features, and index artifacts safely
+cols_to_drop = [col for col in ["CustomerID", "Gender", "Unnamed: 0"] if col in df.columns]
+df.drop(columns=cols_to_drop, inplace=True)
 
-# Define target and features
+# 3. Separate features and target
 y = df['ProdTaken']
 X = df.drop('ProdTaken', axis=1)
 
-# Identify categorical and numerical columns
-categorical_features = ['TypeofContact', 'Occupation', 'ProductPitched', 'MaritalStatus', 'Designation']
+# 4. Train/Test split BEFORE transformation to prevent data leakage
+X_train_raw, X_test_raw, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42, stratify=y
+)
 
-# Ensure 'CityTier' and 'PitchSatisfactionScore' are included in numerical features if they are numerical
+# 5. Define column groups
+categorical_features = ['TypeofContact', 'Occupation', 'ProductPitched', 'MaritalStatus', 'Designation']
 numerical_features = X.select_dtypes(include=['int64', 'float64']).columns.tolist()
 
-# Create a column transformer for one-hot encoding and standard scaling
+# 6. Build preprocessor
 preprocessor = ColumnTransformer(
     transformers=[
         ('cat', OneHotEncoder(handle_unknown='ignore', sparse_output=False), categorical_features),
-        ('num', StandardScaler(), numerical_features) # Apply StandardScaler to numerical features
+        ('num', StandardScaler(), numerical_features)
     ]
 )
 
-# Apply preprocessing
-X_processed = preprocessor.fit_transform(X)
+# 7. Fit ONLY on train data, transform both train and test
+X_train_processed = preprocessor.fit_transform(X_train_raw)
+X_test_processed = preprocessor.transform(X_test_raw)
 
-# Get feature names after one-hot encoding for categorical features
+# 8. Reconstruct feature names
 encoded_feature_names = preprocessor.named_transformers_['cat'].get_feature_names_out(categorical_features)
+all_feature_names = list(encoded_feature_names) + list(numerical_features)
 
-# Get feature names after scaling for numerical features
-scaled_feature_names = numerical_features
+X_train_df = pd.DataFrame(X_train_processed, columns=all_feature_names)
+X_test_df = pd.DataFrame(X_test_processed, columns=all_feature_names)
 
-# Combine all feature names
-all_feature_names = list(encoded_feature_names) + list(scaled_feature_names)
-
-# Convert processed data back to DataFrame
-X_processed_df = pd.DataFrame(X_processed, columns=all_feature_names)
-
-# Split the data into training and testing sets
-X_train, X_test, y_train, y_test = train_test_split(X_processed_df, y, test_size=0.2, random_state=42, stratify=y)
-
-# Save the split datasets
-X_train.to_csv('Xtrain.csv', index=False)
-X_test.to_csv('Xtest.csv', index=False)
+# 9. Export datasets for train.py
+X_train_df.to_csv('Xtrain.csv', index=False)
+X_test_df.to_csv('Xtest.csv', index=False)
 y_train.to_csv('ytrain.csv', index=False)
 y_test.to_csv('ytest.csv', index=False)
 
-# Save the fitted preprocessor for inference in app.py
+# 10. Save the fitted preprocessor for inference in app.py
 output_dir = "tourism_project/deployment"
 os.makedirs(output_dir, exist_ok=True)
 joblib.dump(preprocessor, os.path.join(output_dir, "preprocessor.joblib"))
 
-print("Data preparation complete. Train/test sets and preprocessor.joblib saved successfully.")
+print("Data preparation complete. Datasets and preprocessor.joblib saved successfully.")
