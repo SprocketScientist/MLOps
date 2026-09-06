@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main  # Automatically triggers on push to the main branch
-  workflow_dispatch:  # lets you click "Run workflow" in the Actions tab
+  workflow_dispatch:  # Allows manual runs from the Actions tab
 
 permissions:
   contents: write
@@ -37,10 +37,10 @@ jobs:
         with:
           python-version: "3.11"
       - name: Install Dependencies
-        run: pip install pandas scikit-learn
+        run: pip install pandas scikit-learn joblib
       - name: Run Data Preparation
         run: python tourism_project/model_building/prep.py
-      - name: Upload Train Test Splits
+      - name: Upload Data Splits and Preprocessor
         uses: actions/upload-artifact@v4
         with:
           name: data-splits
@@ -49,6 +49,7 @@ jobs:
             Xtest.csv
             ytrain.csv
             ytest.csv
+            tourism_project/deployment/preprocessor.joblib
 
   model-traning:
     needs: data-prep
@@ -59,21 +60,22 @@ jobs:
         with:
           python-version: "3.11"
       - name: Install Dependencies
-        run: pip install pandas scikit-learn xgboost joblib
-      - name: Download Train Test Splits
+        run: pip install pandas scikit-learn xgboost joblib mlflow
+      - name: Download Data Splits and Preprocessor
         uses: actions/download-artifact@v4
         with:
           name: data-splits
       - name: Start MLflow Server
         run: |
           nohup mlflow ui --host 0.0.0.0 --port 5000 &
-          sleep 5  # Wait for a moment to let the server starts
+          sleep 5  # Wait for server startup
       - name: Model Building
         run: python tourism_project/model_building/train.py
-      - name: Commit Trained Model
+      - name: Commit Trained Model and Preprocessor
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add tourism_project/deployment/Wellness_Tourism_Predictor_model_v1.joblib
-          git commit -m "Add trained model [skip ci]" || echo "No changes to commit"
+          git add -f tourism_project/deployment/Wellness_Tourism_Predictor_model_v1.joblib
+          git add -f tourism_project/deployment/preprocessor.joblib
+          git commit -m "Update model and preprocessor artifacts [skip ci]" || echo "No changes to commit"
           git push
