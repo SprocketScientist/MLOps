@@ -6,7 +6,7 @@ from sklearn.compose import ColumnTransformer
 
 df = pd.read_csv("tourism_project/data/tourism.csv")
 
-# Dropping unnecessary columns
+# Dropping unnecessary columns (customer ID as not useful for model building and gender to avoid unethical model bias)
 df.drop(columns=["CustomerID","Gender"], inplace=True)
 
 # Define target and features
