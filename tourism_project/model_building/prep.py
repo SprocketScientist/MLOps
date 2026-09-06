@@ -22,7 +22,7 @@ numerical_features = X.select_dtypes(include=['int64', 'float64']).columns.tolis
 # Create a column transformer for one-hot encoding and standard scaling
 preprocessor = ColumnTransformer(
     transformers=[
-        ('cat', OneHotEncoder(handle_unknown='ignore'), categorical_features),
+        ('cat', OneHotEncoder(handle_unknown='ignore', sparse_output=False), categorical_features),
         ('num', StandardScaler(), numerical_features) # Apply StandardScaler to numerical features
     ]
 )
@@ -51,4 +51,9 @@ X_test.to_csv('Xtest.csv', index=False)
 y_train.to_csv('ytrain.csv', index=False)
 y_test.to_csv('ytest.csv', index=False)
 
-print("Data preparation complete. Train and test sets saved.")
+# Save the fitted preprocessor for inference in app.py
+output_dir = "tourism_project/deployment"
+os.makedirs(output_dir, exist_ok=True)
+joblib.dump(preprocessor, os.path.join(output_dir, "preprocessor.joblib"))
+
+print("Data preparation complete. Train/test sets and preprocessor.joblib saved successfully.")
